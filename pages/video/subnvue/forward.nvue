@@ -1,0 +1,219 @@
+<template>
+	<view class="wrapper">
+		<view class="top" @click="hideDrawer()"></view>
+		<view class="buttom">
+			<view class="li share-wrapper">
+				<scroll-view class="scroll-view_H" scroll-x="true" @scroll="scroll" scroll-left="0">
+					<view class="scroll-view-item_H " v-for="(item,index) in fenxiang" :key="index" @tap="share(item)">
+						<image class="view-item_H_image" :src="item.src"></image>
+						<text class="view-item_H_text">{{item.id=='collection'?(item.collection?'取消收藏':'收藏'):item.name}}</text>
+					</view>
+				</scroll-view>
+			</view>
+			<view class="li cache-wrapper" @tap="hideDrawer()">
+				<view class="cancel-btn-wrapper">
+					<text>取消</text>
+				</view>
+			</view>
+		</view>
+	</view> 
+</template>
+ 
+<script>
+	import api from '../../../api/index.js';
+	export default {
+		data() {
+			return {
+				fenxiang: [{
+					id:"weixin",
+					provider:"weixin",
+					scene:"WXSceneSession",
+					type:4,
+					src: '/static/img/fenxiang1.png',
+					name: '微信',
+					
+				}, {
+					id:"weixin",
+					provider:"weixin",
+					scene:"WXSenceTimeline",
+					type:4,
+					src: '/static/img/fenxiang2.png',
+					name: '朋友圈'
+				}, {
+					id:"qq",
+					provider:"qq",
+					scene:"",
+					type:1,
+					src: '/static/img/fenxiang3.png',
+					name: 'QQ'
+				}, {
+					id:"qqkj",
+					provider:"qq",
+					scene:"",
+					type:1,
+					src: '/static/img/fenxiang4.png',
+					name: 'QQ空间'
+				}, {
+					id:"collection",
+					src: '/static/img/collection.png',
+					name: '收藏'
+				}],
+				item:{}
+			}
+		},
+		beforeCreate() {},
+		onLoad() {
+			uni.$on('setShareVideo',(res)=>{
+				console.log("setShareVideo",res);
+				this.item = res;
+				
+				
+			})
+		},
+		created() {
+			
+		},
+		methods: {
+			
+			hideDrawer() {
+				uni.getCurrentSubNVue().hide('auto')
+			},
+			collectionAdd(){
+				var type = 'add';
+				if(this.item.collection){
+					type = 'cancel';
+				}
+				api.collectionAdd({type,vid:this.item.id}).then((res)=>{
+					if(res.data.code==1){
+						uni.showToast({
+							title: res.data.msg,
+							icon: 'none'
+						});
+						return;
+					}
+					this.item.collection = !this.item.collection;
+					uni.showToast({
+						title: res.data.msg
+					}); 
+				})
+			},
+			formatUrl(url) {
+				if (url == undefined) {
+					return;
+				}
+				var index = url.indexOf("http");
+				if (index == 0) {
+			
+					return url;
+			
+				}
+				return this.$store.state.baseUrl + url;
+			},
+			share(item) {
+				this.hideDrawer()
+				if(item.id=='collection'){
+					this.collectionAdd();
+					return;
+				}
+				uni.share({
+					provider: item.provider,
+					scene: item.scene,
+					type: item.type,
+					title:this.item.content,
+					summary:this.item.content+"，该视频来源于优雅草科技小视频",
+					href:this.formatUrl(this.item.src),
+					mediaUrl: this.formatUrl(this.item.src),
+					success: function(res) {
+						//console.log("success:" + JSON.stringify(res));
+					},
+					fail: function(err) {
+						//console.log("fail:" + JSON.stringify(err));
+					}
+				});
+			},
+			scroll(e) {}
+		}
+	}
+</script>
+
+<style scoped>
+	.wrapper {
+		flex-direction: column;
+		flex: 1;
+		text-align: center;
+		background-color: transparent;
+	}
+
+	.top {
+		background-color: rgba(0,0,0,0);
+
+		flex: 9;
+	}
+
+	.buttom {
+		
+		flex: 3;
+		padding-bottom: 24upx;
+	}
+	.share-wrapper{
+		flex: 8;
+	}
+	.cancel-wrapper{
+		flex: 3;
+	}
+	.li{
+		margin: 12upx;
+		background-color: #fff;
+		border-radius: 10px;
+	}
+	.bottom-title {
+		flex: 1;
+		height: 30px;
+		line-height: 30px;
+		text-align: center;
+		font-size: 14px;
+		font-weight: bold;
+	}
+
+	.scroll-view_H {
+		flex: 1;
+		flex-direction: row;
+		justify-content: space-between;
+		padding: 10px;
+	}
+
+	.scroll-view-item_H {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-content: center;
+		align-items: center;
+		flex: 1;
+		padding: 5px 10px;
+		text-align: center;
+	}
+
+	.view-item_H_image {
+		width: 90upx;
+		height: 90upx;
+		border-radius: 50%;
+	}
+
+	.view-item_H_text {
+		margin-top: 12upx;
+		font-size: 24upx;
+		text-align: center;
+	}
+	.cancel-btn-wrapper{
+		margin-top: 24upx;
+		
+		padding: 12upx 0upx;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		text-align: center;
+		align-content: center;
+		align-items: center;
+		color: rgba(0,0,0,.3);
+	}
+</style>

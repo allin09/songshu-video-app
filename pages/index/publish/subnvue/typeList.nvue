@@ -1,0 +1,166 @@
+<template> 
+	<view class="container">
+		<view class="top" @click="hideList()">
+
+		</view>
+		<view class="page-body" :style="{height:'750px',width:width+'px'}">
+			<scroll-view class="nav-left" scroll-y >
+				<view class="nav-left-item" @click="categoryClickMain(item,index)" :key="index" 
+				 v-for="(item,index) in categoryList">
+					<text :class="index==categoryActive?'active':''">{{item.name}}</text>
+				</view>
+			</scroll-view>
+			<view class="nav-right">
+				<view class="close-wrapper">
+					<image src="/static/icon/close.png" class="close-img" mode="widthFix" @tap="hideList"></image>
+				</view>
+				<scroll-view  scroll-y :scroll-top="scrollTop" @scroll="scroll"
+				 scroll-with-animation>
+					<view class="nav-right-item" v-for="(item,index) in subCategoryList" :key="index" @click="categoryClickSub(item,index)" >
+						<text>{{item.name}}</text>
+					</view>
+				</scroll-view>
+			</view>
+			
+		</view>
+	</view>
+</template>
+
+<script>
+	
+	import api from '../../../../api/index.js'
+	export default {
+		data() {
+			return {
+				categoryList: [],
+				subCategoryList: [],
+				height: 0,
+				width: 0,
+				categoryActive: 0,
+				scrollTop: 0,
+				scrollHeight: 0,
+				name: "七月_"
+			}
+		},
+		methods: {
+			hideList() {
+				uni.getCurrentSubNVue().hide('auto')
+			},
+			scroll(e) {
+				this.scrollHeight = e.detail.scrollHeight;
+			},
+			categoryClickMain(categroy, index) {
+				this.categoryActive = index;
+				this.subCategoryList = categroy.sub_type;
+				this.scrollTop = -this.scrollHeight * index;
+			},
+			categoryClickSub(subCategroy, index) {
+				//console.log(subCategroy);
+				this.hideList();
+				uni.$emit('selectType',subCategroy);
+			},
+		},
+		mounted() {
+			api.typeList({}).then((res)=>{
+				this.categoryList = res.data.data;
+				this.subCategoryList = this.categoryList[this.categoryActive].sub_type;
+			});
+		},
+		onLoad: function() {
+			this.height = uni.getSystemInfoSync().windowHeight;
+			this.width = uni.getSystemInfoSync().windowWidth;
+		}
+	}
+</script>
+
+<style lang="scss">
+	.container {
+		width: 750rpx;
+		flex-direction: column;
+		flex: 1;
+		text-align: center;
+		background-color: transparent;
+		height: 431upx;
+	}
+
+	.top {
+		background-color: #000;
+		opacity: 0;
+		flex: 4.3;
+	}
+
+	.page-body {
+		padding-left: 24upx;
+		padding-right: 24upx;
+		flex: 7.7;
+		display: flex;
+		flex-direction: row;
+	}
+
+	.nav {
+		display: flex;
+		width: 100%;
+	}
+
+	.nav-left {
+		padding-top: 24upx;
+		border-top-left-radius: 16upx;
+		flex: 4;
+		background-color: #EFEFEF;
+	}
+
+	.nav-left-item {
+		height: 100upx;
+		border-right: solid 1px #E0E0E0;
+		border-bottom: solid 1px #E0E0E0;
+		font-size: 30upx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.nav-right {
+		border-top-right-radius: 16upx;
+		background-color: #FFFFFF;
+		flex: 8;
+		padding: 24upx;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.nav-right-item {
+		display: flex;
+		justify-content: center;
+		border-bottom-color: #999999;
+		border-style: solid;
+		border-bottom-width: 1upx;
+		height: 100upx;
+		text-align: center;
+		padding: 11upx;
+		font-size: 28upx;
+		image {
+			width: 100upx;
+			height: 100upx;
+		}
+	}
+	.close-wrapper{
+		height: 80upx;
+		position: relative;
+		border-bottom-color: #999999;
+		border-style: solid;
+		border-bottom-width: 1upx;
+		
+	}
+	.close-img{
+		
+		height: 60upx;
+		width: 60upx;
+		top: 0;
+		position: absolute;
+		right: 0;
+	}
+
+	.active {
+		color: #FE1F7B;
+	}
+</style>
